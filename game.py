@@ -50,23 +50,23 @@ def get_player_input():
         return -1, -1
 
 def play_game():
-    """Main game function"""
     global score, high_score
 
     sql_lite.init_db()  # Initialize DB
 
-    score = 0
+    score = 0  # Always reset score to zero for a new game
+
     mole_row, mole_col = move_mole()
 
     # Get player name
     player_name = input("Enter your name: ")
     player_data = sql_lite.get_player(player_name)
     if player_data is None:
-        sql_lite.add_or_update_player(player_name, 0, 0)
-        score, high_score = 0, 0
+        sql_lite.add_or_update_player(player_name, 0)
+        high_score = 0
         print(f"\nWelcome {player_name}! Whack the mole by entering row and column numbers.")
     else:
-        score, high_score = player_data
+        high_score = player_data[0]  # Only take highscore from DB
         print(f"\nWelcome back {player_name}! High Score: {high_score}")
 
     print("Game will last for 30 seconds!")
@@ -114,7 +114,7 @@ def play_game():
         high_score = score
         print("New High Score! Congratulations!")
 
-    sql_lite.add_or_update_player(player_name, score, high_score)
+    sql_lite.add_or_update_player(player_name, high_score)
 
     play_again = input("Play again? (y/n): ").lower().strip()
     if play_again == 'y':

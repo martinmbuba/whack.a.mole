@@ -2,6 +2,7 @@ import random
 import time
 from rich.console import Console
 from rich.table import Table
+import sql_lite  # <-- Add this import
 
 # Game variables
 score = 0
@@ -40,7 +41,7 @@ def get_player_input():
         col_input = input("Enter column (0-2): ").strip()
         if col_input.lower() == 'q':
             return 'q', 'q'
-            
+
         row = int(row_input)
         col = int(col_input)
         return row, col
@@ -51,74 +52,70 @@ def get_player_input():
 def play_game():
     """Main game function"""
     global score, high_score
-    
-    # Reset game variables
+
+    sql_lite.init_db()  # Initialize DB
+
     score = 0
     mole_row, mole_col = move_mole()
-    
+
     # Get player name
     player_name = input("Enter your name: ")
-    print(f"\nWelcome {player_name}! Whack the mole by entering row and column numbers.")
+    player_data = sql_lite.get_player(player_name)
+    if player_data is None:
+        sql_lite.add_or_update_player(player_name, 0, 0)
+        score, high_score = 0, 0
+        print(f"\nWelcome {player_name}! Whack the mole by entering row and column numbers.")
+    else:
+        score, high_score = player_data
+        print(f"\nWelcome back {player_name}! High Score: {high_score}")
+
     print("Game will last for 30 seconds!")
-    
-    # Record start time
+
     start_time = time.time()
     last_move_time = start_time
-    
-    # Main game loop
+
     while True:
-        # Calculate remaining time
         elapsed_time = time.time() - start_time
         time_left = max(0, 30 - int(elapsed_time))
-        
-        # Check if time is up
         if time_left <= 0:
             break
-            
-        # Print the board and score
+
         print(f"\nScore: {score} | High Score: {high_score} | Time Left: {time_left}s")
         print_board(mole_row, mole_col)
-        
-        # Get player input
         print("Whack the mole! (Enter row and column)")
         row, col = get_player_input()
-        
-        # Check for quit
         if row == 'q' and col == 'q':
             print("Game quit by player.")
             return
-            
-        # Check if player hit the mole
+
         if row == mole_row and col == mole_col:
             score += 20
             print("WHACK! You hit the mole! +20 points")
-            mole_row, mole_col = move_mole()  # Move mole to new position
+            mole_row, mole_col = move_mole()
         elif 0 <= row <= 2 and 0 <= col <= 2:
             print("Missed! The mole wasn't there.")
-            # Move mole after a few seconds even if missed
             if time.time() - last_move_time > 2:
                 mole_row, mole_col = move_mole()
                 last_move_time = time.time()
         else:
             print("Invalid input. Please enter numbers between 0-2.")
-        
-        # Occasionally move the mole automatically
+
         if time.time() - last_move_time > 3:
             mole_row, mole_col = move_mole()
             last_move_time = time.time()
-    
-    # Game over
+
     print(f"\nScore: {score} | High Score: {high_score} | Time Left: {time_left}s")
     print_board(mole_row, mole_col)
     print("\n--- GAME OVER ---")
     print(f"Final Score: {score}")
-    
-    # Update high score
+
+    # Update high score in DB
     if score > high_score:
         high_score = score
         print("New High Score! Congratulations!")
-    
-    # Ask to play again
+
+    sql_lite.add_or_update_player(player_name, score, high_score)
+
     play_again = input("Play again? (y/n): ").lower().strip()
     if play_again == 'y':
         play_game()

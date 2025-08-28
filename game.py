@@ -14,6 +14,7 @@ high_score_label = None
 time_label = None
 root = None
 
+
 def main():
     global root, buttons, score_label, high_score_label, time_label, time_left
 
@@ -29,12 +30,16 @@ def main():
     info_frame = tk.Frame(root)
     info_frame.pack(pady=10)
 
-    tk.Label(info_frame, text=f"Player: {player_name}", font=("Arial", 12)).grid(row=0, column=0, padx=10)
-    score_label = tk.Label(info_frame, text=f"Score: {score}", font=("Arial", 12))
+    tk.Label(info_frame, text=f"Player: {player_name}", font=(
+        "Arial", 12)).grid(row=0, column=0, padx=10)
+    score_label = tk.Label(
+        info_frame, text=f"Score: {score}", font=("Arial", 12))
     score_label.grid(row=0, column=1, padx=10)
-    time_label = tk.Label(info_frame, text=f"Time Left: {time_left}s", font=("Arial", 12))
+    time_label = tk.Label(
+        info_frame, text=f"Time Left: {time_left}s", font=("Arial", 12))
     time_label.grid(row=0, column=2, padx=10)
-    high_score_label = tk.Label(info_frame, text=f"High Score: {high_score}", font=("Arial", 12))
+    high_score_label = tk.Label(
+        info_frame, text=f"High Score: {high_score}", font=("Arial", 12))
     high_score_label.grid(row=0, column=3, padx=10)
 
     # Game grid
@@ -56,6 +61,7 @@ def main():
     move_mole()
     root.mainloop()
 
+
 def move_mole():
     global target_position
 
@@ -74,6 +80,7 @@ def move_mole():
     if time_left > 0:
         root.after(1000, move_mole)  # Move every second
 
+
 def whack(r, c):
     global score, high_score
 
@@ -85,6 +92,7 @@ def whack(r, c):
             high_score = score
             high_score_label.config(text=f"High Score: {high_score}")
 
+
 def countdown():
     global time_left
 
@@ -93,10 +101,68 @@ def countdown():
         time_label.config(text=f"Time Left: {time_left}s")
         root.after(1000, countdown)
     else:
+        # Call game over when time is up
+        game_over()
         # Disable buttons
         for row in buttons:
             for btn in row:
                 btn.config(state="disabled")
 
+def game_over():
+    global score, time_left, high_score
+
+    # Update high score if necessary
+    if score > high_score:
+        high_score = score
+
+    # Disable buttons
+    for row in buttons:
+        for btn in row:
+            btn.config(state="disabled")
+
+    # Show Game Over message and options
+    game_over_label = tk.Label(root, text=f"Game Over! Your final score is: {score}", font=("Arial", 16))
+    game_over_label.pack(pady=10)
+
+    def restart():
+        nonlocal game_over_label
+        game_over_label.destroy()
+        play_again_btn.destroy()
+        quit_btn.destroy()
+
+        restart_game()
+
+    def quit_game():
+        root.quit()
+
+    play_again_btn = tk.Button(root, text="Play Again", command=restart)
+    play_again_btn.pack()
+
+    quit_btn = tk.Button(root, text="Quit", command=quit_game)
+    quit_btn.pack()
+
+
+def restart_game():
+    global score, time_left
+
+    score = 0
+    time_left = 30
+
+    # Resetting the buttons
+    for row in buttons:
+        for btn in row:
+            btn.config(state="normal", text="")
+
+    # Update labels
+    score_label.config(text=f"Score: {score}")
+    time_label.config(text=f"Time Left: {time_left}s")
+    high_score_label.config(text=f"High Score: {high_score}")
+
+    # Restart game loop
+    move_mole()
+    countdown()
+
 if __name__ == "__main__":
     main()
+
+    

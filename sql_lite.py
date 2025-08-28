@@ -8,7 +8,6 @@ def init_db():
     c.execute("""
         CREATE TABLE IF NOT EXISTS players (
             name TEXT PRIMARY KEY,
-            score INTEGER DEFAULT 0,
             highscore INTEGER DEFAULT 0
         )
     """)
@@ -18,20 +17,19 @@ def init_db():
 def get_player(name):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT score, highscore FROM players WHERE name=?", (name,))
+    c.execute("SELECT highscore FROM players WHERE name=?", (name,))
     result = c.fetchone()
     conn.close()
     return result
 
-def add_or_update_player(name, score, highscore):
+def add_or_update_player(name, highscore):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
-        INSERT INTO players (name, score, highscore)
-        VALUES (?, ?, ?)
+        INSERT INTO players (name, highscore)
+        VALUES (?, ?)
         ON CONFLICT(name) DO UPDATE SET
-            score=excluded.score,
             highscore=excluded.highscore
-    """, (name, score, highscore))
+    """, (name, highscore))
     conn.commit()
     conn.close()

@@ -1,183 +1,133 @@
-import tkinter as tk
 import random
-import sql  # Import your database functions
+import time
+from rich.console import Console
+from rich.table import Table
 
-# Game values
+# Game variables
 score = 0
 high_score = 0
-time_left = 30  # seconds
-target_position = None
-buttons = []
-score_label = None
-high_score_label = None
-time_label = None
-root = None
-player_name = None
 
+console = Console()
 
-def main():
-    global root, buttons, score_label, high_score_label, time_label, time_left, score, high_score, player_name
+def print_board(mole_row, mole_col):
+    """Print the 3x3 game board with the mole position using rich styling"""
+    table = Table(show_header=False, show_lines=True, border_style="bold red")  # <-- changed to red
+    for _ in range(3):
+        table.add_column(justify="center", style="bold")
 
-    sql.init_db()  # Initialize DB
-
-    print(" Welcome to Terminal Whack-a-Mole! ")
-    player_name = input("Please enter your name: ")
-
-    player_data = sql.get_player(player_name)
-    if player_data is None:
-        sql.add_or_update_player(player_name, 0, 0)
-        score, high_score = 0, 0
-        print(f"Hello, {player_name}! Get ready to play Whack-a-Mole! ")
-    else:
-        score, high_score = player_data
-        print(f"Welcome back, {player_name}! High Score: {high_score}")
-
-    # Start GUI
-    root = tk.Tk()
-    root.title("Whack-a-Mole")
-
-    # Info bar
-    info_frame = tk.Frame(root)
-    info_frame.pack(pady=10)
-
-    tk.Label(info_frame, text=f"Player: {player_name}", font=(
-        "Arial", 12)).grid(row=0, column=0, padx=10)
-    score_label = tk.Label(
-        info_frame, text=f"Score: {score}", font=("Arial", 12))
-    score_label.grid(row=0, column=1, padx=10)
-    time_label = tk.Label(
-        info_frame, text=f"Time Left: {time_left}s", font=("Arial", 12))
-    time_label.grid(row=0, column=2, padx=10)
-    high_score_label = tk.Label(
-        info_frame, text=f"High Score: {high_score}", font=("Arial", 12))
-    high_score_label.grid(row=0, column=3, padx=10)
-
-    # Game grid
-    frame = tk.Frame(root)
-    frame.pack(pady=20)
-
-    rows, cols = 3, 3
-    buttons.clear()
-    for r in range(rows):
-        row_buttons = []
-        for c in range(cols):
-            btn = tk.Button(frame, width=8, height=4, bg="lightgrey",
-                            command=lambda r=r, c=c: whack(r, c))
-            btn.grid(row=r, column=c, padx=5, pady=5)
-            row_buttons.append(btn)
-        buttons.append(row_buttons)
-
-    countdown()
-    move_mole()
-    root.mainloop()
-
+    for row in range(3):
+        cells = []
+        for col in range(3):
+            if row == mole_row and col == mole_col:
+                cells.append("[bold green]O[/bold green]")
+            else:
+                cells.append("[dim].[/dim]")
+        table.add_row(*cells)
+    console.print("\n[bold yellow]--- WHACK-A-MOLE ---[/bold yellow]")
+    console.print("[cyan]Use 'q' to quit at any time[/cyan]")
+    console.print(table)
 
 def move_mole():
-    global target_position
+    """Move the mole to a random position"""
+    return random.randint(0, 2), random.randint(0, 2)
 
-    # Reset all buttons
-    for r_idx, row in enumerate(buttons):
-        for c_idx, btn in enumerate(row):
-            btn.config(bg="lightgrey")
+def get_player_input():
+    """Get player's row and column input"""
+    try:
+        row_input = input("Enter row (0-2): ").strip()
+        if row_input.lower() == 'q':
+            return 'q', 'q'
+        col_input = input("Enter column (0-2): ").strip()
+        if col_input.lower() == 'q':
+            return 'q', 'q'
+            
+        row = int(row_input)
+        col = int(col_input)
+        return row, col
+    except ValueError:
+        print("Please enter valid numbers!")
+        return -1, -1
 
-    # Select a new position
-    r, c = random.randint(0, 2), random.randint(0, 2)
-    target_position = (r, c)
-
-    # Set the mole (green)
-    buttons[r][c].config(bg="green")
-
-    if time_left > 0:
-        root.after(1000, move_mole)  # Move every second
-
-
-def whack(r, c):
+def play_game():
+    """Main game function"""
     global score, high_score
-
-    if target_position == (r, c):
-        score += 20
-        score_label.config(text=f"Score: {score}")
-
-        if score > high_score:
-            high_score = score
-            high_score_label.config(text=f"High Score: {high_score}")
-
-
-def countdown():
-    global time_left
-
-    if time_left > 0:
-        time_left -= 1
-        time_label.config(text=f"Time Left: {time_left}s")
-        root.after(1000, countdown)
-    else:
-        # Call game over when time is up
-        game_over()
-        # Disable buttons
-        for row in buttons:
-            for btn in row:
-                btn.config(state="disabled")
-
-
-def game_over():
-    global score, time_left, high_score, player_name
-
+    
+    # Reset game variables
+    score = 0
+    mole_row, mole_col = move_mole()
+    
+    # Get player name
+    player_name = input("Enter your name: ")
+    print(f"\nWelcome {player_name}! Whack the mole by entering row and column numbers.")
+    print("Game will last for 30 seconds!")
+    
+    # Record start time
+    start_time = time.time()
+    last_move_time = start_time
+    
+    # Main game loop
+    while True:
+        # Calculate remaining time
+        elapsed_time = time.time() - start_time
+        time_left = max(0, 30 - int(elapsed_time))
+        
+        # Check if time is up
+        if time_left <= 0:
+            break
+            
+        # Print the board and score
+        print(f"\nScore: {score} | High Score: {high_score} | Time Left: {time_left}s")
+        print_board(mole_row, mole_col)
+        
+        # Get player input
+        print("Whack the mole! (Enter row and column)")
+        row, col = get_player_input()
+        
+        # Check for quit
+        if row == 'q' and col == 'q':
+            print("Game quit by player.")
+            return
+            
+        # Check if player hit the mole
+        if row == mole_row and col == mole_col:
+            score += 20
+            print("WHACK! You hit the mole! +20 points")
+            mole_row, mole_col = move_mole()  # Move mole to new position
+        elif 0 <= row <= 2 and 0 <= col <= 2:
+            print("Missed! The mole wasn't there.")
+            # Move mole after a few seconds even if missed
+            if time.time() - last_move_time > 2:
+                mole_row, mole_col = move_mole()
+                last_move_time = time.time()
+        else:
+            print("Invalid input. Please enter numbers between 0-2.")
+        
+        # Occasionally move the mole automatically
+        if time.time() - last_move_time > 3:
+            mole_row, mole_col = move_mole()
+            last_move_time = time.time()
+    
+    # Game over
+    print(f"\nScore: {score} | High Score: {high_score} | Time Left: {time_left}s")
+    print_board(mole_row, mole_col)
+    print("\n--- GAME OVER ---")
+    print(f"Final Score: {score}")
+    
+    # Update high score
     if score > high_score:
         high_score = score
+        print("New High Score! Congratulations!")
+    
+    # Ask to play again
+    play_again = input("Play again? (y/n): ").lower().strip()
+    if play_again == 'y':
+        play_game()
+    else:
+        print("Thanks for playing!")
 
-    sql.add_or_update_player(player_name, score, high_score)
-
-    # Disable buttons
-    for row in buttons:
-        for btn in row:
-            btn.config(state="disabled")
-
-    # Show Game Over message and options
-    game_over_label = tk.Label(root, text=f"Game Over! Your final score is: {score}", font=("Arial", 16))
-    game_over_label.pack(pady=10)
-
-    def restart():
-        nonlocal game_over_label
-        game_over_label.destroy()
-        play_again_btn.destroy()
-        quit_btn.destroy()
-
-        restart_game()
-
-    def quit_game():
-        root.quit()
-
-    play_again_btn = tk.Button(root, text="Play Again", command=restart)
-    play_again_btn.pack()
-
-    quit_btn = tk.Button(root, text="Quit", command=quit_game)
-    quit_btn.pack()
-
-
-def restart_game():
-    global score, time_left, high_score, player_name
-
-    score = 0
-    time_left = 30
-
-    sql.add_or_update_player(player_name, score, high_score)
-
-    # Resetting the buttons
-    for row in buttons:
-        for btn in row:
-            btn.config(state="normal", text="")
-
-    # Update labels
-    score_label.config(text=f"Score: {score}")
-    time_label.config(text=f"Time Left: {time_left}s")
-    high_score_label.config(text=f"High Score: {high_score}")
-
-    # Restart game loop
-    move_mole()
-    countdown()
-
-
+# Start the game
 if __name__ == "__main__":
-    main()
-
-
+    try:
+        play_game()
+    except KeyboardInterrupt:
+        print("\nGame interrupted. Thanks for playing!")

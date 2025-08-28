@@ -1,0 +1,10 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "whack.me",
+            "database": "${workspaceFolder:whack.a.mole}/userdatabase.db"
+        }
+    ]
+}

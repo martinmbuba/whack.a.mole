@@ -1,12 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
+
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
 db_credentials = {
+
     "drivername": os.getenv("DB_DRIVER"),
     "username": os.getenv("DB_USERNAME"),
     "password": os.getenv("DB_PASSWORD"),

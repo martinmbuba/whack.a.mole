@@ -3,6 +3,7 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from dotenv import load_dotenv
+
 import os
 
 load_dotenv()

@@ -22,7 +22,7 @@ cd whack.a.mole/Game/app
 - Player can enter their name before starting
 - There's a timer to time the playtime
 - There's a score saved at the end of the game
-- The highscore tracking, which is saved in **SQLite** database
+  
 
 
 
@@ -41,6 +41,8 @@ source venv/bin/activate
 3. Install dependencies
 export PIPENV_VENV_IN_PROJECT=1
 pipenv install
+pipenv shell
+pip install sqlalchemy alembic psycopg[binary,pool] python-dotenv
 
 
 ## Project Structure

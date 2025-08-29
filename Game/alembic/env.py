@@ -11,11 +11,12 @@ from app.models import *  # import all models so Alembic can detect them
 # Load .env file
 load_dotenv()
 
-# This is the Alembic Config object, which provides access to the .ini values
+# This is the Alembic Config object
+
+
 config = context.config
 
-# --- Database URL setup ---
-# Try DATABASE_URL first
+
 database_url = os.getenv("DATABASE_URL")
 
 # If not found, build from individual env vars
@@ -32,11 +33,10 @@ if not database_url:
 # Override sqlalchemy.url in alembic.ini
 config.set_main_option("sqlalchemy.url", database_url)
 
-# --- Logging setup ---
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Target metadata for autogenerate (from models)
+# Target metadata for autogenerate from models
 target_metadata = Base.metadata
 
 

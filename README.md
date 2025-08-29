@@ -1,8 +1,22 @@
 # whack-a-mole
-Whack a mole game
+Whack-A-Mole is a fun and simple Python terminal game where you try to hit the mole before time runs out.
+The game displays a 3x3 grid, and each turn, a mole randomly appears in one of the grid cells.
+You type in the row and column numbers to guess the mole’s location. If you’re right → you score a point.
 
-This is a simple **WHACK-A-MOLE** game built in Python.
-It uses **SQLite** for storing player scores.
+All scores and player names are saved in a database, so you can keep track of progress across multiple plays.
+
+Group Members:
+1: Martin Mbuba
+2. Marcus Kaunda
+3. Jeremy Amani
+4. Brilliant Kimari
+5. Umuro Woto
+
+How to Play:
+
+Clone this repository:
+git clone https://github.com/martinmbuba/whack.a.mole.git
+cd whack.a.mole/Game/app
 
 ## Features
 - Player can enter their name before starting

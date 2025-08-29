@@ -74,3 +74,10 @@ WHACK.A.MOLE/
         │   |-- game.py
         │   |-- player.py
 
+## How to Play
+
+After cloning the repository, navigate to the `app` directory and run the game:
+
+```bash
+cd whack.a.mole/Game/app
+python play.py  # starts Whack-A-Mole
